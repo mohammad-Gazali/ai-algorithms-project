@@ -60,20 +60,20 @@ public class Game {
             }
 
             // Computer Turn
-            if (player == Player.AI) {
+            if (player == Player.MAX) {
                 System.out.println("Computer is thinking...");
                 var result = maxMove(curr, Integer.MIN_VALUE, Integer.MAX_VALUE, 0);
 
                 // Move to new state (Java GC handles the old 'curr')
                 curr = result.state();
                 curr.printBoard();
-                player = Player.HUMAN; // Switch to Human
+                player = Player.MIN; // Switch to Human
                 continue;
             }
 
             // Human Turn
             System.out.println("Player " + player + " Turn (Human):");
-            System.out.print("Enter: start (0-30), end (1-31) OR -1 -1 to quit: ");
+            System.out.print("Enter: start (0-29), end (1-30) OR -1 -1 to quit: ");
 
             int start, end;
             try {

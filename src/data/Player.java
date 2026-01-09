@@ -1,23 +1,28 @@
 package data;
 
 public enum Player {
-    // Maximizer
-    AI,
-    // Minimizer
-    HUMAN;
+    MAX,
+    MIN;
 
     @Override
     public String toString() {
         return switch (this) {
-            case AI -> "Computer";
-            case HUMAN -> "Human";
+            case MAX -> "Computer";
+            case MIN -> "Human";
         };
     }
 
     public Player getOtherPlayer() {
         return switch (this) {
-            case AI -> HUMAN;
-            case HUMAN -> AI;
+            case MAX -> MIN;
+            case MIN -> MAX;
+        };
+    }
+
+    public Cell getIdenticalCell() {
+        return switch (this) {
+            case MAX -> Cell.WHITE;
+            case MIN -> Cell.BLACK;
         };
     }
 }
