@@ -23,7 +23,7 @@ public class State {
 
         // First 14 elements: alternate between Black and White pieces
         for (int i = 0; i < 14; i++) {
-            board[i] = (i % 2 == 0) ? Cell.WHITE : Cell.BLACK;
+            board[i] = (i % 2 == 0) ? Cell.BLACK : Cell.WHITE;
         }
 
         // Last 16 elements: all Empty
@@ -172,35 +172,49 @@ public class State {
         System.out.println("-----------------------------");
         System.out.printf("%s's turn with move value of %d\n", activePlayer, moveValue.toNumber());
 
+        var SEPARATOR_BETWEEN_BOARD_AND_RULER = "     ";
+
         // Top
-        System.out.println("┌───┬───┬───┬───┬───┬───┬───┬───┬───┬───┐");
+        System.out.println("┌────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐" + SEPARATOR_BETWEEN_BOARD_AND_RULER + "┌────┬────┬────┬────┬────┬────┬────┬────┬────┬────┐");
 
         // First row
         for (var i = 0; i < 10; i++) {
-            System.out.printf("│ %s ", board[i].boardStringSymbol());
+            System.out.printf("│ %s%s ", board[i].boardStringSymbol(), board[i].boardStringSymbol());
+        }
+        System.out.print("│" + SEPARATOR_BETWEEN_BOARD_AND_RULER);
+        for (var i = 0; i < 10; i++) {
+            System.out.printf("│ %2d ", i + 1);
         }
         System.out.println("│");
 
         // Separator
-        System.out.println("├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤");
+        System.out.println("├────┼────┼────┼────┼────┼────┼────┼────┼────┼────┤" + SEPARATOR_BETWEEN_BOARD_AND_RULER + "├────┼────┼────┼────┼────┼────┼────┼────┼────┼────┤");
 
         // Second row
         for (var i = 19; i >= 10; i--) {
-            System.out.printf("│ %s ", board[i].boardStringSymbol());
+            System.out.printf("│ %s%s ", board[i].boardStringSymbol(), board[i].boardStringSymbol());
+        }
+        System.out.print("│" + SEPARATOR_BETWEEN_BOARD_AND_RULER);
+        for (var i = 19; i >= 10; i--) {
+            System.out.printf("│ %d ", i + 1);
         }
         System.out.println("│");
 
         // Separator
-        System.out.println("├───┼───┼───┼───┼───┼───┼───┼───┼───┼───┤");
+        System.out.println("├────┼────┼────┼────┼────┼────┼────┼────┼────┼────┤" + SEPARATOR_BETWEEN_BOARD_AND_RULER + "├────┼────┼────┼────┼────┼────┼────┼────┼────┼────┤");
 
         // Third row
         for (var i = 20; i < 30; i++) {
-            System.out.printf("│ %s ", board[i].boardStringSymbol());
+            System.out.printf("│ %s%s ", board[i].boardStringSymbol(), board[i].boardStringSymbol());
+        }
+        System.out.print("│" + SEPARATOR_BETWEEN_BOARD_AND_RULER);
+        for (var i = 20; i < 30; i++) {
+            System.out.printf("│ %d ", i + 1);
         }
         System.out.println("│");
 
         // Bottom
-        System.out.println("└───┴───┴───┴───┴───┴───┴───┴───┴───┴───┘");
+        System.out.println("└────┴────┴────┴────┴────┴────┴────┴────┴────┴────┘" + SEPARATOR_BETWEEN_BOARD_AND_RULER + "└────┴────┴────┴────┴────┴────┴────┴────┴────┴────┘");
 
         System.out.println("-----------------------------");
     }
