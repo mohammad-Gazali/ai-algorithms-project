@@ -1,3 +1,3 @@
 import data.State;
 
-public record Result(State state, int score) {}
+public record Result(State state, double score) {}

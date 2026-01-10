@@ -3,7 +3,6 @@ package data;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
 public class State {
     private final Cell[] board;
@@ -111,9 +110,13 @@ public class State {
         return new State(boardCopy, activePlayer.getOtherPlayer(), MoveValue.randomThrow());
     }
 
+    private int cellCount(Cell cell) {
+        return (int)Arrays.stream(board).filter(c -> c == cell).count();
+    }
+
     public Player checkWinner() {
-        if (Arrays.stream(board).noneMatch(c -> c == Cell.BLACK)) return Player.MIN;
-        if (Arrays.stream(board).noneMatch(c -> c == Cell.WHITE)) return Player.MAX;
+        if (cellCount(Cell.BLACK) == 0) return Player.MIN;
+        if (cellCount(Cell.WHITE) == 0) return Player.MAX;
         return null;
     }
 
@@ -121,23 +124,44 @@ public class State {
         var winner = checkWinner();
 
         if (winner != null) {
-            return winner == Player.MAX ? 1_000_000 : -1_000_000;
+            return winner == Player.MAX ? 100_000 : -100_000;
         }
 
-        throw new RuntimeException("TODO");
+        var FREE_PIECE_SCORE = 600;
+
+        var result = 0;
+
+        var maximizeCell = Player.MAX.getIdenticalCell();
+        var minimizeCell = Player.MIN.getIdenticalCell();
+
+        var maximizeFreePiecesCount = 7 - cellCount(maximizeCell);
+        var minimizeFreePiecesCount = 7 - cellCount(minimizeCell);
+
+        result += maximizeFreePiecesCount * FREE_PIECE_SCORE;
+        result -= minimizeFreePiecesCount * FREE_PIECE_SCORE;
+
+        for (var i = 0; i < board.length; i++) {
+            if (board[i] == Cell.EMPTY) continue;
+
+            var sign = board[i] == maximizeCell ? +1 : -1;
+
+            result += sign * (i + 1) * 10;
+        }
+
+        return result;
     }
 
-    public List<State> getNextStates() {
+    public List<State> getNextStates(Player player, MoveValue value) {
         var array = new ArrayList<State>();
 
         for (var i = 0; i < board.length; i++) {
             var cell = board[i];
-            if (cell != activePlayer.getIdenticalCell()) continue;
+            if (cell != player.getIdenticalCell()) continue;
 
             if (i == HOUSE_OF_END_INDEX) {
                 array.add(move(new Move(i, PIECE_FREE_INDEX)));
-            } else if (canMove(new Move(i, i + moveValue.toNumber()))) {
-                array.add(move(new Move(i, i + moveValue.toNumber())));
+            } else if (canMove(new Move(i, i + value.toNumber()))) {
+                array.add(move(new Move(i, i + value.toNumber())));
             }
         }
 
