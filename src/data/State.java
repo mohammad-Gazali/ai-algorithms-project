@@ -6,8 +6,8 @@ import java.util.List;
 
 public class State {
     private final Cell[] board;
-    private final MoveValue moveValue;
-    public final Player activePlayer;
+    public final MoveValue moveValue;
+    public final Move previousMove;
 
     private static final int HOUSE_OF_RETURN_INDEX = 14;
     private static final int HOUSE_OF_HAPPINESS_INDEX = 25;
@@ -17,13 +17,15 @@ public class State {
     private static final int HOUSE_OF_END_INDEX = 29;
     private static final int PIECE_FREE_INDEX = 30;
 
+    public static final int MAXIMUM_VALUE = 100_000;
+
     public State() {
         // Initialize the board
         board = new Cell[30];
 
         // First 14 elements: alternate between Black and White pieces
         for (int i = 0; i < 14; i++) {
-            board[i] = (i % 2 == 0) ? Cell.BLACK : Cell.WHITE;
+            board[i] = (i % 2 == 0) ? Cell.WHITE : Cell.BLACK;
         }
 
         // Last 16 elements: all Empty
@@ -31,17 +33,17 @@ public class State {
             board[i] = Cell.EMPTY;
         }
 
-        activePlayer = Player.MIN;
         moveValue = MoveValue.randomThrow();
+        previousMove = null;
     }
 
-    public State(Cell[] board, Player activePlayer, MoveValue moveValue) {
+    public State(Cell[] board, MoveValue moveValue, Move previousMove) {
         this.board = board;
-        this.activePlayer = activePlayer;
         this.moveValue = moveValue;
+        this.previousMove = previousMove;
     }
 
-    public boolean canMove(Move move) {
+    public boolean canMove(Move move, Player player) {
         var start = move.start();
         var end = move.end();
         var value = moveValue.toNumber();
@@ -58,8 +60,14 @@ public class State {
             (start != HOUSE_OF_END_INDEX && end != PIECE_FREE_INDEX)
         ) return false;
 
+        // Check if the start is the actual player piece
+        if (board[start] != player.getIdenticalCell()) return false;
+
+        // Return true if the end is PIECE_FREE_INDEX
+        if (end == PIECE_FREE_INDEX) return true;
+
         // Check there is no same piece at the end
-        if (board[end] == activePlayer.getIdenticalCell()) return false;
+        if (board[end] == player.getIdenticalCell()) return false;
 
         // House of happiness can't be jumped over
         if (end > HOUSE_OF_HAPPINESS_INDEX && start < HOUSE_OF_HAPPINESS_INDEX) return false;
@@ -74,8 +82,8 @@ public class State {
         return true;
     }
 
-    public State move(Move move) {
-        if (!canMove(move)) return null;
+    public State move(Move move, Player player) {
+        if (!canMove(move, player)) return null;
 
         var boardCopy = board.clone();
 
@@ -92,7 +100,7 @@ public class State {
         // Do the rules for the special cells (only for the active player)
         for (var i = 0; i < boardCopy.length; i++) {
             var cell = boardCopy[i];
-            if (cell != activePlayer.getIdenticalCell()) continue;
+            if (cell != player.getIdenticalCell()) continue;
 
             // Handle HOUSE_OF_WATER_INDEX (even it is the current move)
             if (i == HOUSE_OF_WATER_INDEX) {
@@ -107,7 +115,7 @@ public class State {
             }
         }
 
-        return new State(boardCopy, activePlayer.getOtherPlayer(), MoveValue.randomThrow());
+        return new State(boardCopy, MoveValue.randomThrow(), move);
     }
 
     private int cellCount(Cell cell) {
@@ -124,7 +132,7 @@ public class State {
         var winner = checkWinner();
 
         if (winner != null) {
-            return winner == Player.MAX ? 100_000 : -100_000;
+            return winner == Player.MAX ? MAXIMUM_VALUE : -MAXIMUM_VALUE;
         }
 
         var FREE_PIECE_SCORE = 600;
@@ -159,9 +167,9 @@ public class State {
             if (cell != player.getIdenticalCell()) continue;
 
             if (i == HOUSE_OF_END_INDEX) {
-                array.add(move(new Move(i, PIECE_FREE_INDEX)));
-            } else if (canMove(new Move(i, i + value.toNumber()))) {
-                array.add(move(new Move(i, i + value.toNumber())));
+                array.add(move(new Move(i, PIECE_FREE_INDEX), player));
+            } else if (canMove(new Move(i, i + value.toNumber()), player)) {
+                array.add(move(new Move(i, i + value.toNumber()), player));
             }
         }
 
@@ -169,9 +177,6 @@ public class State {
     }
 
     public void printBoard() {
-        System.out.println("-----------------------------");
-        System.out.printf("%s's turn with move value of %d\n", activePlayer, moveValue.toNumber());
-
         var SEPARATOR_BETWEEN_BOARD_AND_RULER = "     ";
 
         // Top

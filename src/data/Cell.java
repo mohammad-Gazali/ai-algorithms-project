@@ -8,8 +8,8 @@ public enum Cell {
     public String boardStringSymbol() {
         return switch (this) {
             case EMPTY -> " ";
-            case BLACK -> "■";
-            case WHITE -> "□";
+            case BLACK -> "□";
+            case WHITE -> "■";
         };
     }
 }

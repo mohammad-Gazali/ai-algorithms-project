@@ -10,7 +10,7 @@ public enum MoveValue {
     FOUR,
     FIVE;
 
-    int toNumber() {
+    public int toNumber() {
         return switch (this) {
             case ONE -> 1;
             case TWO -> 2;
