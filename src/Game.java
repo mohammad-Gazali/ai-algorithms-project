@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 import data.Move;
 import data.MoveValue;
@@ -7,12 +10,19 @@ import data.State;
 public class Game {
     static final int MAX_DEPTH_LIMIT = 4;
 
-    static Result expectMinimax(State state, int depth, Player player) {
+    static int visitedStatesCount_debug = 0;
+    static List<String> tracingStringsList_debug = new ArrayList<>();
+
+    static Result expectMinimax(State state, int depth, Player player, boolean debug) {
+        visitedStatesCount_debug++;
+
         var winner = state.checkWinner();
 
         if (winner != null || depth >= MAX_DEPTH_LIMIT) {
             return new Result(state, state.evaluate());
         }
+
+        var indentationSpaces_debug = "\t".repeat(depth * 2);
 
         switch (player) {
             case MAX -> {
@@ -20,13 +30,16 @@ public class Game {
                 var bestState = state;
 
                 for (var s : state.getNextStates(Player.MAX, state.moveValue)) {
-                    var result = chanceTurnScore(s, depth, Player.MAX);
+                    var result = chanceTurnScore(s, depth, Player.MAX, debug);
                     if (result > bestValue) {
                         bestValue = result;
                         bestState = s;
                     }
                 }
 
+                if (debug) {
+                    tracingStringsList_debug.add(indentationSpaces_debug + "Max node with score of " + bestValue);
+                }
                 return new Result(bestState, bestValue);
             }
             case MIN -> {
@@ -35,13 +48,16 @@ public class Game {
 
 
                 for (var s : state.getNextStates(Player.MIN, state.moveValue)) {
-                    var result = chanceTurnScore(s, depth, Player.MIN);
+                    var result = chanceTurnScore(s, depth, Player.MIN, debug);
                     if (result < bestValue) {
                         bestValue = result;
                         bestState = s;
                     }
                 }
 
+                if (debug) {
+                    tracingStringsList_debug.add(indentationSpaces_debug + "Min node with score of " + bestValue);
+                }
                 return new Result(bestState, bestValue);
             }
         }
@@ -49,19 +65,25 @@ public class Game {
         throw new RuntimeException("Issue with the algorithm");
     }
 
-    static double chanceTurnScore(State state, int seekPlayerDepth, Player seekChancePlayer) {
+    static double chanceTurnScore(State state, int seekPlayerDepth, Player seekChancePlayer, boolean debug) {
         var expectedValue = 0.0;
+
 
         for (var value: MoveValue.values()) {
             for (var s: state.getNextStates(seekChancePlayer.getOtherPlayer(), value)) {
-                expectedValue += value.getProbability() * expectMinimax(s, seekPlayerDepth + 1, seekChancePlayer.getOtherPlayer()).score();
+                expectedValue += value.getProbability() * expectMinimax(s, seekPlayerDepth + 1, seekChancePlayer.getOtherPlayer(), debug).score();
             }
+        }
+
+        if (debug) {
+            var indentationSpaces_debug = "\t".repeat(seekPlayerDepth * 2 + 1);
+            tracingStringsList_debug.add(indentationSpaces_debug + "Chance node with expected value of " + expectedValue);
         }
 
         return expectedValue;
     }
 
-    public static void playGame(State curr) {
+    public static void playGame(State curr, boolean debug) {
         Scanner scanner = new Scanner(System.in);
         var player = Player.MIN;
 
@@ -81,7 +103,26 @@ public class Game {
             // Computer Turn
             if (player == Player.MAX) {
                 System.out.println("Computer is thinking...");
-                var result = expectMinimax(curr, 0, Player.MAX);
+
+                if (debug) {
+                    System.out.println("==================== DEBUG MODE TRACING ====================");
+                }
+
+                var result = expectMinimax(curr, 0, Player.MAX, debug);
+
+                if (debug) {
+                    Collections.reverse(tracingStringsList_debug);
+                    var tracingString = String.join("\n", tracingStringsList_debug);
+
+                    System.out.println(tracingString);
+                    System.out.printf("\nVisited states count: %d\n", visitedStatesCount_debug);
+                    System.out.printf("Score for the best move: %.2f\n", result.score());
+                    System.out.println("============================================================");
+
+                    // reset debug indicators
+                    visitedStatesCount_debug = 0;
+                    tracingStringsList_debug.clear();
+                }
 
                 // Move to new state (Java GC handles the old 'curr')
                 curr = result.state();
@@ -124,5 +165,9 @@ public class Game {
             player = player.getOtherPlayer();
         }
         scanner.close();
+    }
+
+    public static void playGame(State curr) {
+        playGame(curr, false);
     }
 }
