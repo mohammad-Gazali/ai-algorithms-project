@@ -8,12 +8,12 @@ import data.Player;
 import data.State;
 
 public class Game {
-    static final int MAX_DEPTH_LIMIT = 4;
+    static final int MAX_DEPTH_LIMIT = 5;
 
     static int visitedStatesCount_debug = 0;
     static List<String> tracingStringsList_debug = new ArrayList<>();
 
-    static Result expectMinimax(State state, int depth, Player player, boolean debug) {
+    static Result expectMinimax(State state, int depth, Player player, double alpha, double beta, boolean debug) {
         visitedStatesCount_debug++;
 
         var winner = state.checkWinner();
@@ -30,10 +30,16 @@ public class Game {
                 var bestState = state;
 
                 for (var s : state.getNextStates(Player.MAX, state.moveValue)) {
-                    var result = chanceTurnScore(s, depth, Player.MAX, debug);
+                    var result = chanceTurnScore(s, depth, Player.MAX, alpha, beta, debug);
                     if (result > bestValue) {
                         bestValue = result;
                         bestState = s;
+                    }
+                    alpha = Math.max(alpha, bestValue);
+
+                    // pruning
+                    if (alpha >= beta) {
+                        tracingStringsList_debug.add(indentationSpaces_debug + "\t[PRUNING BRANCH]");
                     }
                 }
 
@@ -48,10 +54,16 @@ public class Game {
 
 
                 for (var s : state.getNextStates(Player.MIN, state.moveValue)) {
-                    var result = chanceTurnScore(s, depth, Player.MIN, debug);
+                    var result = chanceTurnScore(s, depth, Player.MIN, alpha, beta, debug);
                     if (result < bestValue) {
                         bestValue = result;
                         bestState = s;
+                    }
+                    beta = Math.min(beta, bestValue);
+
+                    // pruning
+                    if (alpha >= beta) {
+                        tracingStringsList_debug.add(indentationSpaces_debug + "\t[PRUNING BRANCH]");
                     }
                 }
 
@@ -65,13 +77,13 @@ public class Game {
         throw new RuntimeException("Issue with the algorithm");
     }
 
-    static double chanceTurnScore(State state, int seekPlayerDepth, Player seekChancePlayer, boolean debug) {
+    static double chanceTurnScore(State state, int seekPlayerDepth, Player seekChancePlayer, double alpha, double beta, boolean debug) {
         var expectedValue = 0.0;
 
 
         for (var value: MoveValue.values()) {
             for (var s: state.getNextStates(seekChancePlayer.getOtherPlayer(), value)) {
-                expectedValue += value.getProbability() * expectMinimax(s, seekPlayerDepth + 1, seekChancePlayer.getOtherPlayer(), debug).score();
+                expectedValue += value.getProbability() * expectMinimax(s, seekPlayerDepth + 1, seekChancePlayer.getOtherPlayer(), alpha, beta, debug).score();
             }
         }
 
@@ -108,7 +120,7 @@ public class Game {
                     System.out.println("==================== DEBUG MODE TRACING ====================");
                 }
 
-                var result = expectMinimax(curr, 0, Player.MAX, debug);
+                var result = expectMinimax(curr, 0, Player.MAX, -State.MAXIMUM_VALUE, State.MAXIMUM_VALUE, debug);
 
                 if (debug) {
                     Collections.reverse(tracingStringsList_debug);
