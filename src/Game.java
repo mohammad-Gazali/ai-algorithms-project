@@ -40,6 +40,7 @@ public class Game {
                     // pruning
                     if (alpha >= beta) {
                         tracingStringsList_debug.add(indentationSpaces_debug + "\t[PRUNING BRANCH]");
+                        break;
                     }
                 }
 
@@ -64,6 +65,7 @@ public class Game {
                     // pruning
                     if (alpha >= beta) {
                         tracingStringsList_debug.add(indentationSpaces_debug + "\t[PRUNING BRANCH]");
+                        break;
                     }
                 }
 
